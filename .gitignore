@@ -30,13 +30,14 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Database Files (DADOS acumulados - NÃO enviar)
-*.db
+# Database Files - APENAS DADOS (BLOQUEIA *.sqlite3, *.db)
 *.sqlite3
 *.sqlite
+*.db
 chroma.sqlite3
-backend/rag_db/*.sqlite3
-data/chroma/
+
+# Database Configuration - NÃO BLOQUEIA (ENVIA)
+# init_db.py, database.py, models.py, migrations/, schemas/ são enviados
 
 # Uploads (arquivos do usuário - dados acumulados)
 backend/uploads/
@@ -44,10 +45,11 @@ uploads/
 
 # Ollama Models (dados acumulados - muito grande)
 models/ollama/
-backend/models/
+backend/models/*.bin
+backend/models/*.gguf
+backend/models/*.safetensors
 
 # Cache (dados acumulados)
 .cache/
-__pycache__/
 *.cache
 .pytest_cache/
