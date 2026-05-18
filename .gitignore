@@ -1,45 +1,53 @@
-# Python
+# Python Cache (NÃO arquivos de configuração)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.ipynb_checkpoints/
+
+# Python Virtual Environments
 .venv/
-.env
+venv/
+ENV/
 
 # Node
 node_modules/
 .next/
 dist/
+build/
+coverage/
 
-# Logs
+# Logs (dados acumulados)
 *.log
+logs/
 
-# VSCode
-.vscode/
+# VSCode User Settings (NÃO .vscode/settings.json)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Database
+# Database Files (DADOS acumulados - NÃO enviar)
 *.db
 *.sqlite3
+*.sqlite
+chroma.sqlite3
+backend/rag_db/*.sqlite3
+data/chroma/
 
-# ChromaDB
-chroma/
-
-# Uploads
+# Uploads (arquivos do usuário - dados acumulados)
+backend/uploads/
 uploads/
 
-# Ollama
-models/
+# Ollama Models (dados acumulados - muito grande)
+models/ollama/
+backend/models/
 
-# Cache
+# Cache (dados acumulados)
 .cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Build
-build/
-coverage/
+__pycache__/
+*.cache
+.pytest_cache/
