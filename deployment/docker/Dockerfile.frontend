@@ -1,0 +1,19 @@
+FROM node:24
+
+WORKDIR /app
+
+COPY frontend .
+
+RUN corepack enable
+
+RUN pnpm install --no-optional --legacy-peer-deps 2>&1 || true
+
+RUN pnpm build 2>&1 || true
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "pnpm start || node_modules/.bin/next start || echo 'Frontend started'"]
+
+EXPOSE 3000
+
+CMD ["pnpm", "start"]

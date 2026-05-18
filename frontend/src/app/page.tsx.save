@@ -1,0 +1,57 @@
+"use client"
+
+import { useState } from "react"
+import { api } from "@/lib/api"
+import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
+
+export default function Home() {
+  const [message, setMessage] = useState("")
+  const [response, setResponse] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  async function sendMessage() {
+    if (!message) return
+
+    setLoading(true)
+
+    try {
+      const res = await api.post("/chat", {
+        message,
+      })
+
+      setResponse(res.data.response)
+    } catch (error) {
+      console.error(error)
+    }
+
+    setLoading(false)
+  }
+
+  return (
+    <main className="flex h-screen bg-zinc-950 text-white">
+      <div className="flex flex-col w-full max-w-4xl mx-auto p-6 gap-4">
+        <h1 className="text-3xl font-bold">
+          Meu ChatGPT Local
+        </h1>
+
+        <textarea
+          className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 min-h-[150px]"
+          placeholder="Digite sua mensagem..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+
+        <button
+          onClick={sendMessage}
+          className="bg-white text-black rounded-xl px-4 py-3 font-medium"
+        >
+          {loading ? "Pensando..." : "Enviar"}
+        </button>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 whitespace-pre-wrap">
+          {response}
+        </div>
+      </div>
+    </main>
+  )
+}

@@ -1,0 +1,4 @@
+Notas de Configuração de Infraestrutura Local:
+O ecossistema de desenvolvimento de Inteligência Artificial local utiliza a GPU NVIDIA GeForce RTX 3060.
+Para aceleração de hardware e processamento de tensores matemáticos, a versão instalada do CUDA é a 13.
+O Ollama gerencia os modelos de linguagem de forma eficiente e serve os pesos do Llama3 e do Mistral na porta padrão 11434.

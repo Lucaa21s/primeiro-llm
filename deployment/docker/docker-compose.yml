@@ -1,0 +1,45 @@
+services:
+
+  nginx:
+    build:
+      context: ../nginx
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    restart: always
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: ai
+      POSTGRES_DB: ai_memory
+    ports:
+      - "5432:5432"
+    restart: always

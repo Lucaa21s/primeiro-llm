@@ -1,0 +1,17 @@
+{
+  "language": "en,pt",
+  "languages": {
+    "pt": true
+  },
+  "dictionaries": [
+    "portuguese"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "*.pyc",
+    "__pycache__",
+    ".venv",
+    "data/**"
+  ]
+}

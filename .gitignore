@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+
+# Node
+node_modules/
+.next/
+dist/
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite3
+
+# ChromaDB
+chroma/
+
+# Uploads
+uploads/
+
+# Ollama
+models/
+
+# Cache
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build
+build/
+coverage/
