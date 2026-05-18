@@ -5,12 +5,16 @@ __pycache__/
 *.pyd
 .ipynb_checkpoints/
 
-# Python Virtual Environments
+# Python Virtual Environments - BLOQUEIA PASTA INSTALADA
+# ❌ BLOQUEIA: .venv/, venv/, ENV/ (pasta instalada)
+# ✅ ENVIA: requirements.txt, setup.py, pyproject.toml (arquivos de configuração)
 .venv/
 venv/
 ENV/
 
-# Node
+# Node - BLOQUEIA PASTA INSTALADA
+# ❌ BLOQUEIA: node_modules/ (pasta instalada), .next/ (build)
+# ✅ ENVIA: package.json, pnpm-lock.yaml (arquivos de configuração)
 node_modules/
 .next/
 dist/
@@ -30,20 +34,21 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Database Files - APENAS DADOS (BLOQUEIA *.sqlite3, *.db)
+# Database Files - BLOQUEIA APENAS DADOS
+# ❌ BLOQUEIA: *.sqlite3, *.db (dados acumulados)
+# ✅ ENVIA: init_db.py, database.py, models.py (configuração do banco)
 *.sqlite3
 *.sqlite
 *.db
 chroma.sqlite3
-
-# Database Configuration - NÃO BLOQUEIA (ENVIA)
-# init_db.py, database.py, models.py, migrations/, schemas/ são enviados
 
 # Uploads (arquivos do usuário - dados acumulados)
 backend/uploads/
 uploads/
 
 # Ollama Models (dados acumulados - muito grande)
+# ❌ BLOQUEIA: Modelos binários compilados
+# ✅ ENVIA: Scripts de download/configuração
 models/ollama/
 backend/models/*.bin
 backend/models/*.gguf
