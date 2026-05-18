@@ -18,6 +18,13 @@ services:
     ports:
       - "8000:8000"
     restart: always
+    # === Injeção de Redes para Comunicação Interna e Externa ===
+    environment:
+      - DATABASE_URL=postgresql://ai:ai@postgres:5432/ai_memory
+      - OLLAMA_HOST=http://docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # ==========================================================
     deploy:
       resources:
         reservations:
@@ -43,3 +50,8 @@ services:
     ports:
       - "5432:5432"
     restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

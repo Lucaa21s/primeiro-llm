@@ -26,4 +26,3 @@ def create_plan(user_goal):
     )
 
     return response["message"]["content"]
-1222
