@@ -20,15 +20,34 @@ from app.agents.agent import run_agent
 from multi_agents.supervisor import run_supervisor
 from app.workflows.workflow_engine import run_workflow
 from autonomous.autonomous_core import run_autonomous_system
-from routes.auth_routes import router as auth_router
+from app.services.chat_service import build_chat_prompt, stream_chat_response
+from app.services.document_service import process_document
+from app.services.observability_service import register_observability
+try:
+    from app.services.tasks import process_document_task
+except Exception:
+    process_document_task = None
+from app.services.redis_service import redis_ping
+from experimental.api.router import register_experimental_routes
+try:
+    from routes.auth_routes import router as auth_router
+except Exception as auth_import_error:
+    auth_router = None
+    logger.warning("Auth routes disabled: %s", auth_import_error)
 
 # Importações de Sistemas Distribuídos e AGI
+try:
+    from distributed.orchestrator import run_distributed_ai
+except Exception as distributed_import_error:
+    run_distributed_ai = None
+    logger.warning("Distributed routes disabled: %s", distributed_import_error)
 from distributed.orchestrator import run_distributed_ai
 from civilization.civilization_core import initialize_civilization
 from civilization.evolution_cycle import evolve_civilization
 from agi.agi_supervisor import supervise
 
 app = FastAPI(title="Primeiro LLM")
+register_observability(app)
 
 # Configuração de CORS para comunicação com o Frontend
 origins = [
@@ -47,7 +66,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
+if auth_router is not None:
+    app.include_router(auth_router)
 
 # Modelos de Dados Pydantic
 class Message(BaseModel):
@@ -65,6 +85,8 @@ def _extract_last_message(req: ChatRequest) -> str:
         raise HTTPException(status_code=400, detail="mensagem final não pode ser vazia")
     return content
 
+register_experimental_routes(app, _extract_last_message)
+
 @app.get("/")
 async def home():
     return {
@@ -72,9 +94,18 @@ async def home():
         "project": "primeiro-llm"
     }
 
+@app.get("/health/redis")
+async def redis_health():
+    status = redis_ping()
+    if not status:
+        raise HTTPException(status_code=503, detail="Redis indisponível")
+    return {"status": "ok", "service": "redis"}
+
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     user_message = _extract_last_message(req)
+    prompt = await build_chat_prompt(user_message)
+    return StreamingResponse(stream_chat_response(prompt), media_type="text/plain")
     
     # Busca assíncrona vetorial via pgvector
     try:
@@ -137,21 +168,6 @@ async def multi_agent_route(req: ChatRequest):
     result = run_supervisor(task)
     return result
 
-async def process_document(filepath: str):
-    logger.info(f"Extraindo texto e gerando vetores: {filepath}")
-    try:
-        reader = PdfReader(filepath)
-        text = ""
-        for page in reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text += extracted + "\\n"
-        
-        await add_document(text, filepath)
-        logger.info(f"PDF processado e injetado no pgvector: {filepath}")
-    except Exception as e:
-        logger.error(f"Erro ao processar PDF {filepath}: {e}")
-
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile, background_tasks: BackgroundTasks):
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
@@ -163,8 +179,14 @@ async def create_upload_file(file: UploadFile, background_tasks: BackgroundTasks
         while chunk := await file.read(1024 * 1024): # Lê em lotes de 1MB
             await f.write(chunk)
             
-    background_tasks.add_task(process_document, filepath)
-    return {"filename": unique_filename, "status": "processing"}
+    try:
+        if process_document_task is None:
+            raise RuntimeError("Celery indisponível")
+        process_document_task.delay(filepath)
+        return {"filename": unique_filename, "status": "queued"}
+    except Exception:
+        background_tasks.add_task(process_document, filepath)
+        return {"filename": unique_filename, "status": "processing"}
 
 @app.post("/autonomous")
 async def autonomous_route(req: ChatRequest):
@@ -174,6 +196,8 @@ async def autonomous_route(req: ChatRequest):
 
 @app.post("/distributed")
 async def distributed_route(req: ChatRequest):
+    if run_distributed_ai is None:
+        raise HTTPException(status_code=503, detail="Distributed module indisponível")
     prompt = _extract_last_message(req)
     result = run_distributed_ai(prompt) 
     return result

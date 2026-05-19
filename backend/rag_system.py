@@ -3,7 +3,14 @@ from sentence_transformers import SentenceTransformer
 from app.db.database import async_engine
 import uuid
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+_embedding_model = None
+
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _embedding_model
 
 def split_text(text: str, chunk_size: int = 500):
     chunks = []
@@ -18,7 +25,7 @@ async def add_document(text_content: str, filename: str):
     if not chunks:
         return
         
-    embeddings = embedding_model.encode(chunks)
+    embeddings = get_embedding_model().encode(chunks)
     
     async with async_engine.begin() as conn:
         for chunk, emb in zip(chunks, embeddings):
@@ -36,7 +43,7 @@ async def add_document(text_content: str, filename: str):
             )
 
 async def search_documents(query: str, n_results: int = 4):
-    embedding = embedding_model.encode(query)
+    embedding = get_embedding_model().encode(query)
     emb_str = "[" + ",".join(map(str, embedding.tolist())) + "]"
 
     async with async_engine.connect() as conn:

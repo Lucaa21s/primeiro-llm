@@ -1,6 +1,6 @@
-from agi.adaptive_planner import create_plan
-from agi.recursive_cognition import recursive_reflection
-from agi.universal_reasoning import reason
+from experimental.agi.adaptive_planner import create_plan
+from experimental.agi.recursive_cognition import recursive_reflection
+from experimental.agi.universal_reasoning import reason
 
 
 

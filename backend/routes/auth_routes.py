@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from sqlalchemy.orm import Session
 
-from database import SessionLocal
+from app.db.database import SessionLocal
 
 from models import User
 

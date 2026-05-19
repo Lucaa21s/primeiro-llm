@@ -1,14 +1,19 @@
 from sqlalchemy import text
 from sentence_transformers import SentenceTransformer
-import sys
-import os
 
 from app.db.database import async_engine
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+_embedding_model = None
+
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _embedding_model
 
 async def save_memory(content: str):
-    embedding = embedding_model.encode(content)
+    embedding = get_embedding_model().encode(content)
     embedding_list = embedding.tolist()
     embedding_string = "[" + ",".join(map(str, embedding_list)) + "]"
 
@@ -25,7 +30,7 @@ async def save_memory(content: str):
         )
 
 async def search_memory(query: str, limit: int = 3):
-    embedding = embedding_model.encode(query)
+    embedding = get_embedding_model().encode(query)
     embedding_list = embedding.tolist()
     embedding_string = "[" + ",".join(map(str, embedding_list)) + "]"
 

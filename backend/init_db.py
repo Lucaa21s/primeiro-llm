@@ -33,6 +33,18 @@ def init_database():
             embedding vector(384)
         );
         """))
+
+        print("Criando índices vetoriais (IVFFLAT)...")
+        conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS memories_embedding_ivfflat_idx
+        ON memories USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100);
+        """))
+        conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS documents_embedding_ivfflat_idx
+        ON documents USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100);
+        """))
     print("Banco de dados criado e atualizado com sucesso!")
 
 if __name__ == "__main__":

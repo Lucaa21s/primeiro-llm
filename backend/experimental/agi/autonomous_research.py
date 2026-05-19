@@ -1,4 +1,4 @@
-from agi.scientific_system import scientific_method
+from experimental.agi.scientific_system import scientific_method
 
 
 

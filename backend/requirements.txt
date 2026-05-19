@@ -9,3 +9,9 @@ pydantic
 python-multipart
 aiofiles
 pypdf
+passlib[bcrypt]
+python-jose
+requests
+redis
+celery
+prometheus-client
