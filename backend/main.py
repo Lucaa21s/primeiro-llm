@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Request, BackgroundTasks
+from fastapi import FastAPI, UploadFile, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -15,15 +15,13 @@ from self_improving.evolution_manager import evolve
 from rag_system import search_documents, add_document
 from memory_system import save_memory, search_memory
 from pypdf import PdfReader
-import asyncio
-from agents.agent import run_agent
+from app.agents.agent import run_agent
 from multi_agents.supervisor import run_supervisor
-from workflows.workflow_engine import run_workflow
+from app.workflows.workflow_engine import run_workflow
 from autonomous.autonomous_core import run_autonomous_system
 from routes.auth_routes import router as auth_router
 
 # Importações de Sistemas Distribuídos e AGI
-from distributed import Client
 from distributed.orchestrator import run_distributed_ai
 from civilization.civilization_core import initialize_civilization
 from civilization.evolution_cycle import evolve_civilization
@@ -58,6 +56,14 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[Message]
 
+def _extract_last_message(req: ChatRequest) -> str:
+    if not req.messages:
+        raise HTTPException(status_code=400, detail="messages não pode ser vazio")
+    content = req.messages[-1].content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="mensagem final não pode ser vazia")
+    return content
+
 @app.get("/")
 async def home():
     return {
@@ -67,11 +73,15 @@ async def home():
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
-    user_message = req.messages[-1].content
+    user_message = _extract_last_message(req)
     
     # Busca assíncrona vetorial via pgvector
-    memory_context = await search_memory(user_message)
-    rag_context = await search_documents(user_message)
+    try:
+        memory_context = await search_memory(user_message)
+        rag_context = await search_documents(user_message)
+    except Exception as error:
+        logger.exception("Falha ao consultar memória/RAG: %s", error)
+        raise HTTPException(status_code=503, detail="Serviços de contexto indisponíveis")
 
     final_prompt = f"""
 Você é uma IA moderna.
@@ -85,7 +95,10 @@ Contexto encontrado:
 Pergunta:
 {user_message}
 """
-    await save_memory(user_message)
+    try:
+        await save_memory(user_message)
+    except Exception as error:
+        logger.exception("Falha ao salvar memória: %s", error)
 
     async def generate():
         client = AsyncClient(host=os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434"))
@@ -107,19 +120,19 @@ Pergunta:
 
 @app.post("/agent")
 async def agent_route(req: ChatRequest):
-    user_message = req.messages[-1].content
+    user_message = _extract_last_message(req)
     result = run_agent(user_message)
     return result
 
 @app.post("/workflow")
 async def workflow_route(req: ChatRequest):
-    goal = req.messages[-1].content
+    goal = _extract_last_message(req)
     result = run_workflow(goal)
     return result
 
 @app.post("/multi-agent")
 async def multi_agent_route(req: ChatRequest):
-    task = req.messages[-1].content
+    task = _extract_last_message(req)
     result = run_supervisor(task)
     return result
 
@@ -154,19 +167,19 @@ async def create_upload_file(file: UploadFile, background_tasks: BackgroundTasks
 
 @app.post("/autonomous")
 async def autonomous_route(req: ChatRequest):
-    goal = req.messages[-1].content
+    goal = _extract_last_message(req)
     result = run_autonomous_system(goal)
     return result
 
 @app.post("/distributed")
 async def distributed_route(req: ChatRequest):
-    prompt = req.messages[-1].content
+    prompt = _extract_last_message(req)
     result = run_distributed_ai(prompt) 
     return result
 
 @app.post("/evolve")
 async def evolve_route(req: ChatRequest):
-    prompt = req.messages[-1].content
+    prompt = _extract_last_message(req)
 
     # Configura a ponte de rede correta com o host externo do Docker
     ollama_host = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
@@ -217,17 +230,17 @@ async def civilization_status():
 
 @app.post("/civilization/evolve")
 async def civilization_evolve(req: ChatRequest):
-    prompt = req.messages[-1].content
+    prompt = _extract_last_message(req)
     return evolve_civilization(prompt)
 
 @app.post("/supervise")
 async def supervise_route(req: ChatRequest):
-    task = req.messages[-1].content
+    task = _extract_last_message(req)
     return supervise(task)
 
 @app.post("/agi")
 async def agi_route(req: ChatRequest):
-    prompt = req.messages[-1].content
+    prompt = _extract_last_message(req)
     return supervise(prompt)
 
 logger.info("API iniciada de forma assíncrona")
