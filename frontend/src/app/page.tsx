@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
+import { ToastContainer, useToast } from "@/components/ui/Toast"
+import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from "@/components/ui/useKeyboardShortcuts"
+import { HistorySearch } from "@/components/ui/HistorySearch"
+import { ThemeCustomizerModal } from "@/components/ui/ThemeCustomizer"
+import { CollaborativeIndicator } from "@/components/ui/Collaborative"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -51,10 +57,18 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<string>("")
   const [sessions, setSessions]         = useState<ChatSession[]>([])
   const [activeSession, setActiveSession] = useState<string | null>(null)
+  
+  // New UI Components State
+  const [showHistorySearch, setShowHistorySearch] = useState(false)
+  const [showThemeCustomizer, setShowThemeCustomizer] = useState(false)
+  const [collaborativeSessions, setCollaborativeSessions] = useState<any[]>([])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const fileInputRef   = useRef<HTMLInputElement>(null)
+  
+  // Toast hook
+  const { addToast } = useToast.useToast()
 
   // Auto-scroll
   useEffect(() => {
@@ -68,6 +82,40 @@ export default function Home() {
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px"
   }, [input])
+
+  // Keyboard Shortcuts
+  useKeyboardShortcuts({
+    n: {
+      description: "Novo chat",
+      handler: newChat,
+      ctrlKey: true,
+    },
+    "/": {
+      description: "Foco no input",
+      handler: () => {
+        const input = document.querySelector(".chat-textarea") as HTMLTextAreaElement
+        input?.focus()
+      },
+    },
+    "?": {
+      description: "Ajuda/Atalhos",
+      handler: () => {
+        addToast("Atalhos: Ctrl+N = Novo chat, / = Foco, Ctrl+K = Buscar, Ctrl+Shift+T = Temas", "info", 6000)
+      },
+      shiftKey: true,
+    },
+    k: {
+      description: "Buscar histórico",
+      handler: () => setShowHistorySearch(true),
+      ctrlKey: true,
+    },
+    t: {
+      description: "Customizar tema",
+      handler: () => setShowThemeCustomizer(true),
+      ctrlKey: true,
+      shiftKey: true,
+    },
+  })
 
   // ─── Upload PDF ─────────────────────────────────────────────────────────────
 
@@ -88,7 +136,11 @@ export default function Home() {
       const data = await res.json()
       setUploadedFile(file.name)
       setUploadStatus("success")
-      // Toast message in chat
+      
+      // Toast notification
+      addToast(`📄 ${file.name} carregado com sucesso! Processando embeddings...`, "success")
+      
+      // Also add to chat
       setMessages(prev => [...prev, {
         role: "assistant",
         content: `✅ **PDF carregado com sucesso!**\n\nArquivo: \`${file.name}\`\nStatus: processando embeddings e injetando no banco vetorial em background.\n\nAgora você pode fazer perguntas sobre o conteúdo do documento!`,
@@ -96,9 +148,10 @@ export default function Home() {
       }])
     } catch {
       setUploadStatus("error")
+      addToast("❌ Erro ao fazer upload do PDF", "error")
       setTimeout(() => setUploadStatus("idle"), 3000)
     }
-  }, [])
+  }, [addToast])
 
   // ─── Send Message ────────────────────────────────────────────────────────────
 
@@ -123,6 +176,7 @@ export default function Home() {
       }
       setSessions(prev => [session, ...prev])
       setActiveSession(session.id)
+      addToast(`Nova conversa iniciada em modo ${currentMode.label}`, "info", 2000)
     }
 
     // Placeholder assistant message for streaming
@@ -198,6 +252,7 @@ export default function Home() {
       })
 
     } catch (err) {
+      addToast("❌ Erro de conexão com o backend", "error")
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = {
@@ -211,7 +266,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [input, loading, messages, activeMode])
+  }, [input, loading, messages, activeMode, addToast])
 
   // ─── Keyboard Handler ────────────────────────────────────────────────────────
 
@@ -224,13 +279,14 @@ export default function Home() {
 
   // ─── New Chat ─────────────────────────────────────────────────────────────────
 
-  const newChat = () => {
+  const newChat = useCallback(() => {
     setMessages([])
     setInput("")
     setActiveSession(null)
     setUploadStatus("idle")
     setUploadedFile("")
-  }
+    addToast("✨ Nova conversa criada", "info", 1500)
+  }, [addToast])
 
   // ─── Render ───────────────────────────────────────────────────────────────────
 
@@ -238,6 +294,31 @@ export default function Home() {
 
   return (
     <div className="app-shell">
+      {/* Toast Notifications */}
+      <ToastContainer />
+
+      {/* History Search Modal */}
+      {showHistorySearch && (
+        <HistorySearch
+          items={sessions}
+          onSelect={(id) => {
+            setActiveSession(id)
+            setShowHistorySearch(false)
+            addToast("Conversa carregada", "success", 1500)
+          }}
+          onClose={() => setShowHistorySearch(false)}
+        />
+      )}
+
+      {/* Theme Customizer Modal */}
+      {showThemeCustomizer && (
+        <ThemeCustomizerModal
+          onClose={() => setShowThemeCustomizer(false)}
+          onApply={(theme) => {
+            addToast("✨ Tema aplicado com sucesso!", "success", 2000)
+          }}
+        />
+      )}
 
       {/* ═══ SIDEBAR ═══ */}
       <aside className="sidebar">
@@ -277,7 +358,16 @@ export default function Home() {
         <div className="history-section">
           {sessions.length > 0 && (
             <>
-              <div className="history-group-label" style={{ marginTop: "16px" }}>Recentes</div>
+              <div className="history-group-label" style={{ marginTop: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>Recentes</span>
+                <button
+                  onClick={() => setShowHistorySearch(true)}
+                  className="history-search-quick-btn"
+                  title="Buscar histórico (Ctrl+K)"
+                >
+                  🔍
+                </button>
+              </div>
               {sessions.map(session => (
                 <div
                   key={session.id}
@@ -325,6 +415,12 @@ export default function Home() {
           </div>
 
           <div className="topbar-actions">
+            {/* Collaborative Indicator */}
+            <CollaborativeIndicator
+              sessions={collaborativeSessions}
+              onInvite={() => addToast("Compartilhamento em tempo real ainda em desenvolvimento", "info")}
+            />
+
             {/* Upload PDF */}
             <label
               id="upload-pdf-btn"
@@ -345,6 +441,18 @@ export default function Home() {
                 style={{ display: "none" }}
               />
             </label>
+
+            {/* Theme Customizer Button */}
+            <button
+              onClick={() => setShowThemeCustomizer(true)}
+              className="upload-btn"
+              title="Customizar tema (Ctrl+Shift+T)"
+            >
+              🎨 Tema
+            </button>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
           </div>
         </div>
 
