@@ -1,58 +1,58 @@
+from sqlalchemy import text
 from sentence_transformers import SentenceTransformer
-import chromadb
+from app.db.database import async_engine
+import uuid
 
-embedding_model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-client = chromadb.PersistentClient(
-    path="rag_db"
-)
-
-collection = client.get_or_create_collection(
-    name="documents"
-)
-
-
-def split_text(text, chunk_size=500):
+def split_text(text: str, chunk_size: int = 500):
     chunks = []
-
     words = text.split()
-
     for i in range(0, len(words), chunk_size):
         chunk = " ".join(words[i:i + chunk_size])
         chunks.append(chunk)
-
     return chunks
 
-
-def add_document(text, filename):
-
-    chunks = split_text(text)
-
+async def add_document(text_content: str, filename: str):
+    chunks = split_text(text_content)
+    if not chunks:
+        return
+        
     embeddings = embedding_model.encode(chunks)
+    
+    async with async_engine.begin() as conn:
+        for chunk, emb in zip(chunks, embeddings):
+            emb_str = "[" + ",".join(map(str, emb.tolist())) + "]"
+            await conn.execute(
+                text("""
+                INSERT INTO documents (content, document_id, embedding)
+                VALUES (:content, :doc_id, :embedding)
+                """),
+                {
+                    "content": chunk,
+                    "doc_id": filename,
+                    "embedding": emb_str,
+                }
+            )
 
-    ids = [
-        f"{filename}_{i}"
-        for i in range(len(chunks))
-    ]
+async def search_documents(query: str, n_results: int = 4):
+    embedding = embedding_model.encode(query)
+    emb_str = "[" + ",".join(map(str, embedding.tolist())) + "]"
 
-    collection.add(
-        documents=chunks,
-        embeddings=embeddings.tolist(),
-        ids=ids,
-    )
-
-
-def search_documents(query, n_results=4):
-
-    query_embedding = embedding_model.encode(
-        [query]
-    )
-
-    results = collection.query(
-        query_embeddings=query_embedding.tolist(),
-        n_results=n_results,
-    )
-
-    return results["documents"][0]
+    async with async_engine.connect() as conn:
+        result = await conn.execute(
+            text("""
+            SELECT content
+            FROM documents
+            ORDER BY embedding <-> CAST(:embedding AS vector)
+            LIMIT :limit
+            """),
+            {
+                "embedding": emb_str,
+                "limit": n_results,
+            },
+        )
+        rows = result.fetchall()
+        if not rows:
+            return ""
+        return "\\n".join([row[0] for row in rows])

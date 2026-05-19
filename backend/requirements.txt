@@ -1,8 +1,11 @@
 fastapi
 uvicorn
-sqlalchemy
+sqlalchemy[asyncio]
 psycopg2-binary
+asyncpg
 sentence-transformers
 ollama
 pydantic
 python-multipart
+aiofiles
+pypdf

@@ -1,0 +1,13 @@
+8.0K	/home/mmt/IA/primeiro-llm/README.md
+0	/home/mmt/IA/primeiro-llm/app.py
+5.2G	/home/mmt/IA/primeiro-llm/backend
+8.0K	/home/mmt/IA/primeiro-llm/bootstrap_architecture.sh
+1.3M	/home/mmt/IA/primeiro-llm/data
+60K	/home/mmt/IA/primeiro-llm/deployment
+8.2M	/home/mmt/IA/primeiro-llm/diagnostics
+812M	/home/mmt/IA/primeiro-llm/frontend
+4.0K	/home/mmt/IA/primeiro-llm/models
+4.0K	/home/mmt/IA/primeiro-llm/notebooks
+4.0K	/home/mmt/IA/primeiro-llm/outputs
+0	/home/mmt/IA/primeiro-llm/requirements.txt
+72K	/home/mmt/IA/primeiro-llm/scripts

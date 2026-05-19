@@ -1,0 +1,295 @@
+/home/mmt/IA/primeiro-llm
+├── README.md
+├── app.py
+├── backend
+│   ├── __pycache__
+│   │   ├── auth.cpython-314.pyc
+│   │   ├── database.cpython-314.pyc
+│   │   ├── main.cpython-314.pyc
+│   │   ├── memory_system.cpython-314.pyc
+│   │   ├── models.cpython-314.pyc
+│   │   └── rag_system.cpython-314.pyc
+│   ├── agents
+│   │   ├── __pycache__
+│   │   │   ├── agent.cpython-314.pyc
+│   │   │   └── tools_router.cpython-314.pyc
+│   │   ├── agent.py
+│   │   └── tools_router.py
+│   ├── agi
+│   │   ├── __pycache__
+│   │   │   ├── adaptive_planner.cpython-314.pyc
+│   │   │   ├── agi_supervisor.cpython-314.pyc
+│   │   │   ├── recursive_cognition.cpython-314.pyc
+│   │   │   └── universal_reasoning.cpython-314.pyc
+│   │   ├── adaptive_planner.py
+│   │   ├── agi_supervisor.py
+│   │   ├── autonomous_research.py
+│   │   ├── cognition_engine.py
+│   │   ├── generalized_memory.py
+│   │   ├── knowledge_synthesis.py
+│   │   ├── recursive_cognition.py
+│   │   ├── scientific_system.py
+│   │   ├── universal_reasoning.py
+│   │   └── world_model.py
+│   ├── auth.py
+│   ├── autonomous
+│   │   ├── __pycache__
+│   │   │   ├── autonomous_core.cpython-314.pyc
+│   │   │   ├── executor.cpython-314.pyc
+│   │   │   ├── loop_engine.cpython-314.pyc
+│   │   │   ├── planner.cpython-314.pyc
+│   │   │   └── reflection.cpython-314.pyc
+│   │   ├── autonomous_core.py
+│   │   ├── executor.py
+│   │   ├── loop_engine.py
+│   │   ├── planner.py
+│   │   └── reflection.py
+│   ├── civilization
+│   │   ├── __pycache__
+│   │   │   ├── civilization_core.cpython-314.pyc
+│   │   │   ├── evolution_cycle.cpython-314.pyc
+│   │   │   ├── recursive_reasoning.cpython-314.pyc
+│   │   │   └── society_manager.cpython-314.pyc
+│   │   ├── civilization_core.py
+│   │   ├── civilization_memory.py
+│   │   ├── distributed_cognition.py
+│   │   ├── emergent_behavior.py
+│   │   ├── evolution_cycle.py
+│   │   ├── governance_system.py
+│   │   ├── recursive_reasoning.py
+│   │   ├── society_manager.py
+│   │   ├── swarm_engine.py
+│   │   └── synthetic_economy.py
+│   ├── database.py
+│   ├── distributed
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-314.pyc
+│   │   │   ├── inference_router.cpython-314.pyc
+│   │   │   ├── load_balancer.cpython-314.pyc
+│   │   │   ├── node_manager.cpython-314.pyc
+│   │   │   └── orchestrator.cpython-314.pyc
+│   │   ├── gpu_scheduler.py
+│   │   ├── inference_router.py
+│   │   ├── load_balancer.py
+│   │   ├── node_manager.py
+│   │   └── orchestrator.py
+│   ├── init_db.py
+│   ├── interplanetary
+│   │   ├── autonomous_missions.py
+│   │   ├── cosmic_orchestrator.py
+│   │   ├── cosmic_router.py
+│   │   ├── deep_space_reasoning.py
+│   │   ├── exploration_ai.py
+│   │   ├── extraterrestrial_network.py
+│   │   ├── galactic_memory.py
+│   │   ├── interplanetary_supervisor.py
+│   │   ├── mars_agents.py
+│   │   └── planetary_sync.py
+│   ├── main.py
+│   ├── memory_system.py
+│   ├── models.py
+│   ├── multi_agents
+│   │   ├── __pycache__
+│   │   │   ├── coding_agent.cpython-314.pyc
+│   │   │   ├── orchestrator.cpython-314.pyc
+│   │   │   ├── rag_agent.cpython-314.pyc
+│   │   │   ├── research_agent.cpython-314.pyc
+│   │   │   ├── supervisor.cpython-314.pyc
+│   │   │   └── workflow_agent.cpython-314.pyc
+│   │   ├── coding_agent.py
+│   │   ├── memory_agent.py
+│   │   ├── orchestrator.py
+│   │   ├── rag_agent.py
+│   │   ├── research_agent.py
+│   │   ├── supervisor.py
+│   │   └── workflow_agent.py
+│   ├── planetary
+│   │   ├── distributed_memory.py
+│   │   ├── edge_ai.py
+│   │   ├── federation_system.py
+│   │   ├── global_router.py
+│   │   ├── hyperscale_inference.py
+│   │   ├── orchestration_grid.py
+│   │   ├── planetary_supervisor.py
+│   │   ├── realtime_sync.py
+│   │   ├── vector_cloud.py
+│   │   └── worldwide_agents.py
+│   ├── rag_data
+│   ├── rag_db
+│   │   └── chroma.sqlite3
+│   ├── rag_system.py
+│   ├── requirements.txt
+│   ├── routes
+│   │   ├── __pycache__
+│   │   │   └── auth_routes.cpython-314.pyc
+│   │   └── auth_routes.py
+│   ├── run_test.sh
+│   ├── self_improving
+│   │   ├── __pycache__
+│   │   │   ├── auto_optimizer.cpython-314.pyc
+│   │   │   ├── evolution_manager.cpython-314.pyc
+│   │   │   ├── improvement_engine.cpython-314.pyc
+│   │   │   ├── reflection_engine.cpython-314.pyc
+│   │   │   ├── reinforcement_loop.cpython-314.pyc
+│   │   │   └── scoring_engine.cpython-314.pyc
+│   │   ├── adaptive_memory.py
+│   │   ├── auto_optimizer.py
+│   │   ├── evolution_manager.py
+│   │   ├── improvement_engine.py
+│   │   ├── reflection_engine.py
+│   │   ├── reinforcement_loop.py
+│   │   └── scoring_engine.py
+│   ├── test_api.py
+│   ├── test_platform.sh
+│   ├── tools
+│   │   ├── __pycache__
+│   │   │   ├── filesystem_tool.cpython-314.pyc
+│   │   │   ├── pdf_tool.cpython-314.pyc
+│   │   │   └── python_tool.cpython-314.pyc
+│   │   ├── filesystem_tool.py
+│   │   ├── pdf_tool.py
+│   │   └── python_tool.py
+│   ├── uploads
+│   └── workflows
+│       ├── __pycache__
+│       │   ├── executor.cpython-314.pyc
+│       │   ├── planner.cpython-314.pyc
+│       │   └── workflow_engine.cpython-314.pyc
+│       ├── executor.py
+│       ├── planner.py
+│       ├── scheduler.py
+│       ├── tasks
+│       └── workflow_engine.py
+├── bootstrap_architecture.sh
+├── data
+│   ├── chroma
+│   │   ├── 1c590b79-7cbc-409f-aa51-894292376122
+│   │   │   ├── data_level0.bin
+│   │   │   ├── header.bin
+│   │   │   ├── length.bin
+│   │   │   └── link_lists.bin
+│   │   ├── 1f9d52ff-4acd-4a58-bfe2-3998755f5b2f
+│   │   │   ├── data_level0.bin
+│   │   │   ├── header.bin
+│   │   │   ├── length.bin
+│   │   │   └── link_lists.bin
+│   │   ├── 758c3500-0d19-4ab6-bf8c-5f204524efaa
+│   │   │   ├── data_level0.bin
+│   │   │   ├── header.bin
+│   │   │   ├── length.bin
+│   │   │   └── link_lists.bin
+│   │   └── chroma.sqlite3
+│   └── docs
+│       ├── manual.pdf
+│       └── notas.txt
+├── deployment
+│   ├── docker
+│   │   ├── Dockerfile.backend
+│   │   ├── Dockerfile.frontend
+│   │   ├── docker-compose.yml
+│   │   ├── kubernetes
+│   │   │   └── backend-deployment.yaml
+│   │   └── nginx
+│   │       └── nginx.conf
+│   ├── kubernetes
+│   ├── monitoring
+│   ├── nginx
+│   │   ├── Dockerfile.nginx
+│   │   └── nginx.conf
+│   └── scripts
+├── diagnostics
+│   ├── benchmarks
+│   ├── inventory
+│   │   └── system_inventory.md
+│   ├── logs
+│   ├── reports
+│   ├── scanner
+│   │   ├── benchmark.sh
+│   │   ├── cleanup.sh
+│   │   ├── inventory.sh
+│   │   ├── project_scan.sh
+│   │   └── snapshot.sh
+│   ├── scans
+│   │   └── tree.txt
+│   └── snapshots
+├── frontend
+│   ├── README.md
+│   ├── components.json
+│   ├── eslint.config.mjs
+│   ├── next-env.d.ts
+│   ├── next.config.ts
+│   ├── node_modules
+│   │   ├── @tailwindcss
+│   │   │   └── postcss -> ../.pnpm/@tailwindcss+postcss@4.3.0/node_modules/@tailwindcss/postcss
+│   │   ├── @types
+│   │   │   ├── node -> ../.pnpm/@types+node@20.19.41/node_modules/@types/node
+│   │   │   ├── react -> ../.pnpm/@types+react@19.2.14/node_modules/@types/react
+│   │   │   ├── react-dom -> ../.pnpm/@types+react-dom@19.2.3_@types+react@19.2.14/node_modules/@types/react-dom
+│   │   │   └── react-syntax-highlighter -> ../.pnpm/@types+react-syntax-highlighter@15.5.13/node_modules/@types/react-syntax-highlighter
+│   │   ├── axios -> .pnpm/axios@1.16.1/node_modules/axios
+│   │   ├── class-variance-authority -> .pnpm/class-variance-authority@0.7.1/node_modules/class-variance-authority
+│   │   ├── clsx -> .pnpm/clsx@2.1.1/node_modules/clsx
+│   │   ├── eslint -> .pnpm/eslint@9.39.4_jiti@2.7.0/node_modules/eslint
+│   │   ├── eslint-config-next -> .pnpm/eslint-config-next@16.2.6_@typescript-eslint+parser@8.59.3_eslint@9.39.4_jiti@2.7.0__ty_a81655bebb7bc3291ceae052ca71fc61/node_modules/eslint-config-next
+│   │   ├── lucide-react -> .pnpm/lucide-react@1.16.0_react@19.2.4/node_modules/lucide-react
+│   │   ├── next -> .pnpm/next@16.2.6_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next
+│   │   ├── radix-ui -> .pnpm/radix-ui@1.4.3_@types+react-dom@19.2.3_@types+react@19.2.14__@types+react@19.2.14_react_8630af8f756c6a5269f4297295494860/node_modules/radix-ui
+│   │   ├── react -> .pnpm/react@19.2.4/node_modules/react
+│   │   ├── react-dom -> .pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom
+│   │   ├── react-markdown -> .pnpm/react-markdown@10.1.0_@types+react@19.2.14_react@19.2.4/node_modules/react-markdown
+│   │   ├── react-syntax-highlighter -> .pnpm/react-syntax-highlighter@16.1.1_react@19.2.4/node_modules/react-syntax-highlighter
+│   │   ├── remark-gfm -> .pnpm/remark-gfm@4.0.1/node_modules/remark-gfm
+│   │   ├── shadcn -> .pnpm/shadcn@4.7.0_@types+node@20.19.41_typescript@5.9.3/node_modules/shadcn
+│   │   ├── tailwind-merge -> .pnpm/tailwind-merge@3.6.0/node_modules/tailwind-merge
+│   │   ├── tailwindcss -> .pnpm/tailwindcss@4.3.0/node_modules/tailwindcss
+│   │   ├── tw-animate-css -> .pnpm/tw-animate-css@1.4.0/node_modules/tw-animate-css
+│   │   └── typescript -> .pnpm/typescript@5.9.3/node_modules/typescript
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── pnpm-workspace.yaml
+│   ├── postcss.config.mjs
+│   ├── public
+│   │   ├── file.svg
+│   │   ├── globe.svg
+│   │   ├── next.svg
+│   │   ├── vercel.svg
+│   │   └── window.svg
+│   ├── src
+│   │   ├── app
+│   │   │   ├── favicon.ico
+│   │   │   ├── globals.css
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── page.tsx.save
+│   │   ├── components
+│   │   │   ├── chat
+│   │   │   └── ui
+│   │   └── lib
+│   │       ├── api.ts
+│   │       └── utils.ts
+│   └── tsconfig.json
+├── models
+├── notebooks
+├── outputs
+├── requirements.txt
+└── scripts
+    ├── __pycache__
+    │   ├── api.cpython-314.pyc
+    │   └── memory.cpython-314.pyc
+    ├── api.py
+    ├── chat.py
+    ├── embeddings.py
+    ├── memory.py
+    ├── memory_chat.py
+    ├── pdf_chunks.py
+    ├── pdf_rag.py
+    ├── pdf_reader.py
+    ├── pdf_search.py
+    ├── rag.py
+    ├── rag_chat.py
+    ├── search.py
+    ├── test_cuda.py
+    └── vector_store.py
+
+90 directories, 203 files
