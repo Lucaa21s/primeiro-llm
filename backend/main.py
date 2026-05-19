@@ -12,6 +12,10 @@ from app.core.logger import logger
 
 # Importações de Sistemas Core e Evolutivos
 from self_improving.evolution_manager import evolve
+from rag_system import search_documents, add_document
+from memory_system import save_memory, search_memory
+from pypdf import PdfReader
+import asyncio
 from app.agents.agent import run_agent
 from multi_agents.supervisor import run_supervisor
 from app.workflows.workflow_engine import run_workflow
@@ -37,6 +41,10 @@ try:
 except Exception as distributed_import_error:
     run_distributed_ai = None
     logger.warning("Distributed routes disabled: %s", distributed_import_error)
+from distributed.orchestrator import run_distributed_ai
+from civilization.civilization_core import initialize_civilization
+from civilization.evolution_cycle import evolve_civilization
+from agi.agi_supervisor import supervise
 
 app = FastAPI(title="Primeiro LLM")
 register_observability(app)
@@ -98,6 +106,49 @@ async def chat_endpoint(req: ChatRequest):
     user_message = _extract_last_message(req)
     prompt = await build_chat_prompt(user_message)
     return StreamingResponse(stream_chat_response(prompt), media_type="text/plain")
+    
+    # Busca assíncrona vetorial via pgvector
+    try:
+        memory_context = await search_memory(user_message)
+        rag_context = await search_documents(user_message)
+    except Exception as error:
+        logger.exception("Falha ao consultar memória/RAG: %s", error)
+        raise HTTPException(status_code=503, detail="Serviços de contexto indisponíveis")
+
+    final_prompt = f"""
+Você é uma IA moderna.
+
+Memórias relevantes:
+{memory_context}
+
+Contexto encontrado:
+{rag_context}
+
+Pergunta:
+{user_message}
+"""
+    try:
+        await save_memory(user_message)
+    except Exception as error:
+        logger.exception("Falha ao salvar memória: %s", error)
+
+    async def generate():
+        client = AsyncClient(host=os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434"))
+        stream_response = await client.chat(
+            model="llama3",
+            messages=[
+                {
+                    "role": "user",
+                    "content": final_prompt,
+                }
+            ],
+            stream=True
+        )
+
+        async for chunk in stream_response:
+            yield chunk["message"]["content"]
+
+    return StreamingResponse(generate(), media_type="text/plain")
 
 @app.post("/agent")
 async def agent_route(req: ChatRequest):
@@ -189,5 +240,32 @@ async def evolve_route(req: ChatRequest):
     # Aciona o Evolution Manager da Fase 15
     evolved = evolve(prompt, answer)
     return evolved
+
+@app.post("/initialize-civilization")
+async def initialize_civilization_route():
+    return initialize_civilization()
+
+@app.post("/evolve-civilization")
+async def evolve_civilization_route():
+    return evolve_civilization("")
+
+@app.get("/civilization")
+async def civilization_status():
+    return initialize_civilization()
+
+@app.post("/civilization/evolve")
+async def civilization_evolve(req: ChatRequest):
+    prompt = _extract_last_message(req)
+    return evolve_civilization(prompt)
+
+@app.post("/supervise")
+async def supervise_route(req: ChatRequest):
+    task = _extract_last_message(req)
+    return supervise(task)
+
+@app.post("/agi")
+async def agi_route(req: ChatRequest):
+    prompt = _extract_last_message(req)
+    return supervise(prompt)
 
 logger.info("API iniciada de forma assíncrona")
