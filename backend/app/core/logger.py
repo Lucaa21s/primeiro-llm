@@ -1,4 +1,4 @@
-nano backend/app/core/logger.pyimport logging
+import logging
 
 logging.basicConfig(
     level=logging.INFO,

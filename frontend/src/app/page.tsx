@@ -3,16 +3,19 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
 import { ToastContainer, useToast } from "@/components/ui/Toast"
-import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from "@/components/ui/useKeyboardShortcuts"
+import { useKeyboardShortcuts } from "@/components/ui/useKeyboardShortcuts"
 import { HistorySearch } from "@/components/ui/HistorySearch"
 import { ThemeCustomizerModal } from "@/components/ui/ThemeCustomizer"
 import { CollaborativeIndicator } from "@/components/ui/Collaborative"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { API_BASE_URL } from "@/lib/api"
+import type { ComponentProps } from "react"
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type AIMode = "chat" | "agent" | "multi-agent" | "agi"
 type UploadStatus = "idle" | "uploading" | "success" | "error"
+type CollaborativeSessionList = ComponentProps<typeof CollaborativeIndicator>["sessions"]
 
 interface Message {
   role: "user" | "assistant"
@@ -29,8 +32,6 @@ interface ChatSession {
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
-
-const API_BASE = "http://localhost:8000"
 
 const MODES: { id: AIMode; label: string; icon: string; endpoint: string; color: string }[] = [
   { id: "chat",        label: "Chat",        icon: "💬", endpoint: "/chat",        color: "chat"  },
@@ -61,7 +62,7 @@ export default function Home() {
   // New UI Components State
   const [showHistorySearch, setShowHistorySearch] = useState(false)
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false)
-  const [collaborativeSessions, setCollaborativeSessions] = useState<any[]>([])
+  const [collaborativeSessions] = useState<CollaborativeSessionList>([])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
@@ -82,6 +83,15 @@ export default function Home() {
     ta.style.height = "auto"
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px"
   }, [input])
+
+  const newChat = useCallback(() => {
+    setMessages([])
+    setInput("")
+    setActiveSession(null)
+    setUploadStatus("idle")
+    setUploadedFile("")
+    addToast("✨ Nova conversa criada", "info", 1500)
+  }, [addToast])
 
   // Keyboard Shortcuts
   useKeyboardShortcuts({
@@ -128,12 +138,12 @@ export default function Home() {
     formData.append("file", file)
 
     try {
-      const res = await fetch(`${API_BASE}/uploadfile/`, {
+      const res = await fetch(`${API_BASE_URL}/uploadfile/`, {
         method: "POST",
         body: formData,
       })
       if (!res.ok) throw new Error("Upload failed")
-      const data = await res.json()
+      await res.json()
       setUploadedFile(file.name)
       setUploadStatus("success")
       
@@ -180,7 +190,6 @@ export default function Home() {
     }
 
     // Placeholder assistant message for streaming
-    const placeholderIdx = messages.length + 1
     setMessages(prev => [...prev, {
       role: "assistant",
       content: "",
@@ -189,7 +198,7 @@ export default function Home() {
     }])
 
     try {
-      const res = await fetch(`${API_BASE}${currentMode.endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}${currentMode.endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -251,13 +260,13 @@ export default function Home() {
         return updated
       })
 
-    } catch (err) {
+    } catch {
       addToast("❌ Erro de conexão com o backend", "error")
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = {
           role: "assistant",
-          content: `❌ **Erro de conexão**\n\nNão foi possível conectar ao backend em \`${API_BASE}\`. Verifique se o uvicorn está rodando.\n\n\`\`\`\nuvicorn main:app --reload\n\`\`\``,
+          content: `❌ **Erro de conexão**\n\nNão foi possível conectar ao backend em \`${API_BASE_URL}\`. Verifique se o uvicorn está rodando.\n\n\`\`\`\nuvicorn main:app --reload\n\`\`\``,
           mode: activeMode,
           isStreaming: false,
         }
@@ -278,15 +287,6 @@ export default function Home() {
   }
 
   // ─── New Chat ─────────────────────────────────────────────────────────────────
-
-  const newChat = useCallback(() => {
-    setMessages([])
-    setInput("")
-    setActiveSession(null)
-    setUploadStatus("idle")
-    setUploadedFile("")
-    addToast("✨ Nova conversa criada", "info", 1500)
-  }, [addToast])
 
   // ─── Render ───────────────────────────────────────────────────────────────────
 
@@ -314,7 +314,7 @@ export default function Home() {
       {showThemeCustomizer && (
         <ThemeCustomizerModal
           onClose={() => setShowThemeCustomizer(false)}
-          onApply={(theme) => {
+          onApply={() => {
             addToast("✨ Tema aplicado com sucesso!", "success", 2000)
           }}
         />

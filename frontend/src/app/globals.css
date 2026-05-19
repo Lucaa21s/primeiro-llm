@@ -58,7 +58,7 @@
 
 /* ===== BASE ===== */
 @layer base {
-  * { @apply border-border; box-sizing: border-box; }
+  * { border-color: var(--border); box-sizing: border-box; }
   html { font-family: "Inter", system-ui, sans-serif; }
   body {
     background: var(--background);

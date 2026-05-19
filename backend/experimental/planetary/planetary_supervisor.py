@@ -1,6 +1,6 @@
-from planetary.global_router import route_request
-from planetary.hyperscale_inference import distributed_inference
-from planetary.orchestration_grid import orchestrate
+from experimental.planetary.global_router import route_request
+from experimental.planetary.hyperscale_inference import distributed_inference
+from experimental.planetary.orchestration_grid import orchestrate
 
 
 

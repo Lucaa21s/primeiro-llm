@@ -1,6 +1,6 @@
-from interplanetary.cosmic_router import route_cosmic
-from interplanetary.deep_space_reasoning import reason_space
-from interplanetary.cosmic_orchestrator import orchestrate_cosmic
+from experimental.interplanetary.cosmic_router import route_cosmic
+from experimental.interplanetary.deep_space_reasoning import reason_space
+from experimental.interplanetary.cosmic_orchestrator import orchestrate_cosmic
 
 
 

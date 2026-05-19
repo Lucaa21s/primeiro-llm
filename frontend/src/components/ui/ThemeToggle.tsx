@@ -1,18 +1,12 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Moon, Sun } from "lucide-react"
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto")
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
+  const [theme, setTheme] = useState<"light" | "dark" | "auto">(() => {
+    if (typeof window === "undefined") return "auto"
     const stored = localStorage.getItem("theme") as "light" | "dark" | "auto" | null
-    if (stored) {
-      setTheme(stored)
-      applyTheme(stored)
-    }
-  }, [])
+    return stored ?? "auto"
+  })
 
   const applyTheme = (newTheme: "light" | "dark" | "auto") => {
     const html = document.documentElement
@@ -36,7 +30,8 @@ export function ThemeToggle() {
     applyTheme(nextTheme)
   }
 
-  if (!mounted) return null
+  const isDarkPreferred =
+    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
 
   return (
     <button
@@ -45,7 +40,7 @@ export function ThemeToggle() {
       title={`Tema: ${theme}`}
       aria-label="Alternar tema"
     >
-      {theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? (
+      {theme === "dark" || (theme === "auto" && isDarkPreferred) ? (
         <Moon size={16} />
       ) : (
         <Sun size={16} />

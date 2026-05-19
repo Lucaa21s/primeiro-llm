@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Request, BackgroundTasks
+from fastapi import FastAPI, UploadFile, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -12,24 +12,34 @@ from app.core.logger import logger
 
 # Importações de Sistemas Core e Evolutivos
 from self_improving.evolution_manager import evolve
-from rag_system import search_documents, add_document
-from memory_system import save_memory, search_memory
-from pypdf import PdfReader
-import asyncio
-from agents.agent import run_agent
+from app.agents.agent import run_agent
 from multi_agents.supervisor import run_supervisor
-from workflows.workflow_engine import run_workflow
+from app.workflows.workflow_engine import run_workflow
 from autonomous.autonomous_core import run_autonomous_system
-from routes.auth_routes import router as auth_router
+from app.services.chat_service import build_chat_prompt, stream_chat_response
+from app.services.document_service import process_document
+from app.services.observability_service import register_observability
+try:
+    from app.services.tasks import process_document_task
+except Exception:
+    process_document_task = None
+from app.services.redis_service import redis_ping
+from experimental.api.router import register_experimental_routes
+try:
+    from routes.auth_routes import router as auth_router
+except Exception as auth_import_error:
+    auth_router = None
+    logger.warning("Auth routes disabled: %s", auth_import_error)
 
 # Importações de Sistemas Distribuídos e AGI
-from distributed import Client
-from distributed.orchestrator import run_distributed_ai
-from civilization.civilization_core import initialize_civilization
-from civilization.evolution_cycle import evolve_civilization
-from agi.agi_supervisor import supervise
+try:
+    from distributed.orchestrator import run_distributed_ai
+except Exception as distributed_import_error:
+    run_distributed_ai = None
+    logger.warning("Distributed routes disabled: %s", distributed_import_error)
 
 app = FastAPI(title="Primeiro LLM")
+register_observability(app)
 
 # Configuração de CORS para comunicação com o Frontend
 origins = [
@@ -48,7 +58,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
+if auth_router is not None:
+    app.include_router(auth_router)
 
 # Modelos de Dados Pydantic
 class Message(BaseModel):
@@ -58,6 +69,16 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[Message]
 
+def _extract_last_message(req: ChatRequest) -> str:
+    if not req.messages:
+        raise HTTPException(status_code=400, detail="messages não pode ser vazio")
+    content = req.messages[-1].content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="mensagem final não pode ser vazia")
+    return content
+
+register_experimental_routes(app, _extract_last_message)
+
 @app.get("/")
 async def home():
     return {
@@ -65,78 +86,36 @@ async def home():
         "project": "primeiro-llm"
     }
 
+@app.get("/health/redis")
+async def redis_health():
+    status = redis_ping()
+    if not status:
+        raise HTTPException(status_code=503, detail="Redis indisponível")
+    return {"status": "ok", "service": "redis"}
+
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
-    user_message = req.messages[-1].content
-    
-    # Busca assíncrona vetorial via pgvector
-    memory_context = await search_memory(user_message)
-    rag_context = await search_documents(user_message)
-
-    final_prompt = f"""
-Você é uma IA moderna.
-
-Memórias relevantes:
-{memory_context}
-
-Contexto encontrado:
-{rag_context}
-
-Pergunta:
-{user_message}
-"""
-    await save_memory(user_message)
-
-    async def generate():
-        client = AsyncClient(host=os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434"))
-        stream_response = await client.chat(
-            model="llama3",
-            messages=[
-                {
-                    "role": "user",
-                    "content": final_prompt,
-                }
-            ],
-            stream=True
-        )
-
-        async for chunk in stream_response:
-            yield chunk["message"]["content"]
-
-    return StreamingResponse(generate(), media_type="text/plain")
+    user_message = _extract_last_message(req)
+    prompt = await build_chat_prompt(user_message)
+    return StreamingResponse(stream_chat_response(prompt), media_type="text/plain")
 
 @app.post("/agent")
 async def agent_route(req: ChatRequest):
-    user_message = req.messages[-1].content
+    user_message = _extract_last_message(req)
     result = run_agent(user_message)
     return result
 
 @app.post("/workflow")
 async def workflow_route(req: ChatRequest):
-    goal = req.messages[-1].content
+    goal = _extract_last_message(req)
     result = run_workflow(goal)
     return result
 
 @app.post("/multi-agent")
 async def multi_agent_route(req: ChatRequest):
-    task = req.messages[-1].content
+    task = _extract_last_message(req)
     result = run_supervisor(task)
     return result
-
-async def process_document(filepath: str):
-    logger.info(f"Extraindo texto e gerando vetores: {filepath}")
-    try:
-        reader = PdfReader(filepath)
-        text = ""
-        for page in reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text += extracted + "\\n"
-        
-        await add_document(text, filepath)
-        logger.info(f"PDF processado e injetado no pgvector: {filepath}")
-    except Exception as e:
-        logger.error(f"Erro ao processar PDF {filepath}: {e}")
 
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile, background_tasks: BackgroundTasks):
@@ -149,24 +128,32 @@ async def create_upload_file(file: UploadFile, background_tasks: BackgroundTasks
         while chunk := await file.read(1024 * 1024): # Lê em lotes de 1MB
             await f.write(chunk)
             
-    background_tasks.add_task(process_document, filepath)
-    return {"filename": unique_filename, "status": "processing"}
+    try:
+        if process_document_task is None:
+            raise RuntimeError("Celery indisponível")
+        process_document_task.delay(filepath)
+        return {"filename": unique_filename, "status": "queued"}
+    except Exception:
+        background_tasks.add_task(process_document, filepath)
+        return {"filename": unique_filename, "status": "processing"}
 
 @app.post("/autonomous")
 async def autonomous_route(req: ChatRequest):
-    goal = req.messages[-1].content
+    goal = _extract_last_message(req)
     result = run_autonomous_system(goal)
     return result
 
 @app.post("/distributed")
 async def distributed_route(req: ChatRequest):
-    prompt = req.messages[-1].content
+    if run_distributed_ai is None:
+        raise HTTPException(status_code=503, detail="Distributed module indisponível")
+    prompt = _extract_last_message(req)
     result = run_distributed_ai(prompt) 
     return result
 
 @app.post("/evolve")
 async def evolve_route(req: ChatRequest):
-    prompt = req.messages[-1].content
+    prompt = _extract_last_message(req)
 
     # Configura a ponte de rede correta com o host externo do Docker
     ollama_host = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
@@ -202,32 +189,5 @@ async def evolve_route(req: ChatRequest):
     # Aciona o Evolution Manager da Fase 15
     evolved = evolve(prompt, answer)
     return evolved
-
-@app.post("/initialize-civilization")
-async def initialize_civilization_route():
-    return initialize_civilization()
-
-@app.post("/evolve-civilization")
-async def evolve_civilization_route():
-    return evolve_civilization("")
-
-@app.get("/civilization")
-async def civilization_status():
-    return initialize_civilization()
-
-@app.post("/civilization/evolve")
-async def civilization_evolve(req: ChatRequest):
-    prompt = req.messages[-1].content
-    return evolve_civilization(prompt)
-
-@app.post("/supervise")
-async def supervise_route(req: ChatRequest):
-    task = req.messages[-1].content
-    return supervise(task)
-
-@app.post("/agi")
-async def agi_route(req: ChatRequest):
-    prompt = req.messages[-1].content
-    return supervise(prompt)
 
 logger.info("API iniciada de forma assíncrona")

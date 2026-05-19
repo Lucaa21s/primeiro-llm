@@ -1,19 +1,15 @@
-FROM node:24
+FROM node:24-slim
 
 WORKDIR /app
 
-COPY frontend .
+COPY frontend/package.json frontend/package-lock.json ./
 
-RUN corepack enable
+RUN npm ci
 
-RUN pnpm install --no-optional --legacy-peer-deps 2>&1 || true
+COPY frontend ./
 
-RUN pnpm build 2>&1 || true
-
-EXPOSE 3000
-
-CMD ["sh", "-c", "pnpm start || node_modules/.bin/next start || echo 'Frontend started'"]
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["npm", "run", "start"]

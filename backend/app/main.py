@@ -1,10 +1,10 @@
-# ==========================================
-# ATENÇÃO: ESTE ARQUIVO FOI MOVIDO!
-# ==========================================
-# O ponto de entrada (entrypoint) do FastAPI 
-# foi movido para a raiz da pasta backend:
-# -> backend/main.py
-#
-# Isso corrige os problemas de PYTHONPATH 
-# ao rodar `uvicorn main:app`.
-# ==========================================
+"""Compatibility FastAPI entrypoint.
+
+Allows running both:
+- uvicorn main:app --reload
+- uvicorn app.main:app --reload
+"""
+
+from main import app
+
+__all__ = ["app"]
