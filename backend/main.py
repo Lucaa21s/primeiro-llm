@@ -15,6 +15,7 @@ from self_improving.evolution_manager import evolve
 from rag_system import search_documents, add_document
 from memory_system import save_memory, search_memory
 from pypdf import PdfReader
+import asyncio
 from app.agents.agent import run_agent
 from multi_agents.supervisor import run_supervisor
 from app.workflows.workflow_engine import run_workflow
